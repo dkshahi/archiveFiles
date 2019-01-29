@@ -36,9 +36,9 @@ class Utilities:
         try:
             print(output_file)
             print(source_dir)
-            # tar = tarfile.open(output_file, "w:gz")
-            # tar.add(source_dir, arcname=os.path.basename(source_dir))
-            # tar.close()
+            tar = tarfile.open(output_file, "w:gz")
+            tar.add(source_dir, arcname=os.path.basename(source_dir))
+            tar.close()
             created = True
         except:
             Utilities.capture_exception(Utilities.logger, "Error creating tar file{0}".format(sys.exc_info()))

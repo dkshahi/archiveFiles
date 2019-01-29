@@ -52,7 +52,6 @@ if __name__ == '__main__':
 								# create a tgz file of the directory
 								print('Need to create tar file of the {0} directory'.format(backup))
 								tarfile = os.path.join(backupDir, config.get('tar', 'tarfile'))
-								print
 								if utils.create_tarfile(tarfile, backup):
 									backupFile = tarfile
 								else:
