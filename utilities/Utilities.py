@@ -34,8 +34,6 @@ class Utilities:
     def create_tarfile(output_file, source_dir):
         created = False
         try:
-            print(output_file)
-            print(source_dir)
             tar = tarfile.open(output_file, "w:gz")
             tar.add(source_dir, arcname=os.path.basename(source_dir))
             tar.close()
