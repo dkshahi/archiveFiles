@@ -1,3 +1,4 @@
+import datetime
 import zipfile
 import logging
 import os
@@ -11,6 +12,21 @@ class Utilities:
 
     def __init__(self):
         pass
+
+    @staticmethod
+    def archive_file(file_name):
+        archived = False
+        archive_name = None
+        date_suffix = None
+        try:
+            date_suffix = datetime.datetime.now().strftime("%Y%m%d%H%M%S")
+            archive_name = file_name + "." + date_suffix
+            archived = Utilities.rename_file(file_name, archive_name)
+        except:
+            Utilities.capture_exception(Utilities.logger, "Error archiving {0}: {1}".format(file_name, sys.exc_info()))
+            archived = False
+        finally:
+            return archived, archive_name
 
     def capture_exception(self, logger, mess, ex):
         err = ''
@@ -45,24 +61,23 @@ class Utilities:
             return created
 
     def create_zipfile(self, filename):
-        blnzipcreated = False
-        zip_file = None
+        created = False
         try:
             zip_file = "{0}.gz".format(filename)
             zf = zipfile.ZipFile(zip_file, mode='w')
             try:
                 zf.write(filename)
-                blnzipcreated = True
+                created = True
                 self.log_output(self, "{0} was successfully compressed.".format(filename), 'info')
             except:
                 Utilities.capture_exception(self, Utilities.logger, "Error creating zip for {0}".format(filename), sys.exc_info())
-                blnzipcreated = False
+                created = False
             finally:
                 zf.close()
         except:
             Utilities.capture_exception(self, Utilities.logger, "Error creating zip for {0}".format(filename), sys.exc_info())
-            blnzipcreated = False
-        return blnzipcreated
+            created = False
+        return created
 
     @staticmethod
     def log_output(logger, mess, level):
@@ -84,6 +99,18 @@ class Utilities:
     @staticmethod
     def get_logging():
         return Utilities.logger
+
+    @staticmethod
+    def rename_file(file_name, new_file_name):
+        renamed = False
+        try:
+            os.rename(file_name, new_file_name)
+            renamed = True
+        except:
+            Utilities.capture_exception(Utilities.logger, "Unable to rename {0} to {1}".format(file_name, new_file_name), sys.exc_info())
+            renamed = False
+        finally:
+            return renamed
 
     @staticmethod
     def set_logger(filename, level):

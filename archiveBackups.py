@@ -6,24 +6,25 @@ from utilities import Utilities
 
 if __name__ == '__main__':
 	DEBUG = False
-	mesAno = time.strftime("%B%Y")
-	mesDia = time.strftime("%m%d")
+	archiveLocation = None
+	archivedFile = None
 	backup = None
 	backupName = None
 	backupDir = None
 	backupFile = None
-	archiveLocation = None
-	archivedFile = None
-	error = False
-	mesAnoDir = None
-	fileName = ''
-	utils = Utilities()
-	logger = None
+	blnContinue = True
 	compress = False
 	config = None
 	configFile = None
+	error = False
+	fileName = ''
+	logger = None
+	mesAnoDir = None
+	mesAno = time.strftime("%B%Y")
+	mesDia = time.strftime("%m%d")
 	return_value = False
 	tarfile = None
+	utils = Utilities()
 	try:
 		if len(sys.argv) == 4:
 			try:
@@ -37,32 +38,33 @@ if __name__ == '__main__':
 
 					backupName = sys.argv[2]
 					archiveLocation = sys.argv[3]
-					utils.log_output(logger, "Starting archive {0} process...".format(backupName), 'info')
 					backupDir = config.get('runtime', 'baseDir')
+					utils.log_output(logger, "Starting archive of {0}...".format(backupName), 'info')
 					if os.path.exists(backupDir):
-						utils.log_output(logger, "Working inside {0}".format(backupDir), 'debug')
+						utils.log_output(logger, "Backup directory: {0}".format(backupDir), 'debug')
 						backup = os.path.join(backupDir, backupName)
 						if os.path.exists(backup):
 							# backupFile = os.path.join(os.sep, backupDir, fileName)
 							# backupFile = os.path.join(backupDir, fileName)
-							utils.log_output(logger, "Backup file: {0}".format(backup), 'debug')
-
 							# Check to see if this a directory
 							if os.path.isdir(backup):
 								# create a tgz file of the directory
-								print('Need to create tar file of the {0} directory'.format(backup))
 								tarfile = os.path.join(backupDir, config.get('tar', 'tarfile'))
+								utils.log_output(logger, "Tarring the {0} directory to {1}...".format(backup, tarfile), 'info')
 								if utils.create_tarfile(tarfile, backup):
 									backupFile = tarfile
+									utils.log_output(logger, "Tar file {0} has been created".format(backupFile), 'info')
 								else:
 									error = True
+									utils.log_output(logger, "Error creating {0}".format(tarfile), 'error')
 							else:
+								utils.log_output(logger, "{0} is a file. May need to compress it.".format(backup), 'info')
 								backupFile = backup
 
 							if error:
-								print('Something is wrong')
+								utils.log_output(logger, "Error creating the tar file. Review the log", 'error')
 							else:
-								print("Will now be saving {0} to {1}".format(backupFile, archiveLocation))
+								utils.log_output(logger, "Saving {0} to {1}".format(backupFile, archiveLocation), 'info')
 								if os.path.isfile(backupFile):
 									# Ensure month/year archivedDir exists
 									# mesAnoDir = os.path.join(os.sep, backupDir, mesAno)
@@ -84,10 +86,17 @@ if __name__ == '__main__':
 										# archivedFile = os.path.join(os.sep,archivedDir,fileName)
 										fileName = os.path.split(backupFile)[1]
 										archivedFile = os.path.join(archivedDir, fileName)
-										# Cancel if backup file already exist in directory
+
+										# Archive any existing file, appending the date/time
 										if os.path.exists(archivedFile):
 											utils.log_output(logger, "There is already a file named {0} in the {1} directory".format(fileName, archivedDir), 'error')
-										else:
+											utils.log_output(logger, "Attempting to archive {0}...".format(archivedFile), 'info')
+											arr = utils.archive_file(archivedFile)
+											blnContinue = arr[0]
+											if blnContinue:
+												utils.log_output(logger, "{0} has been archived as {1}".format(archivedFile, arr[1]), 'debug')
+
+										if blnContinue:
 											os.rename(backupFile, archivedFile)
 											utils.log_output(logger, "{0} has been moved to {1}".format(backupFile, archivedFile), 'info')
 											if compress.lower() == 'true':
@@ -103,6 +112,8 @@ if __name__ == '__main__':
 														utils.log_output(logger, "Unable to compress {0}".format(archivedFile), 'error')
 												except:
 													utils.capture_exception(logger, "Error trying to compress {0}".format(archivedFile), 'error')
+										else:
+											utils.log_output(logger, "Unable to rename existing {0} file. Manual intervention needed.".format(fileName), 'info')
 									except:
 										utils.capture_exception(logger, "Error trying to rename {0} to {1}".format(backupFile, archivedFile), sys.exc_info())
 									# utls.log_output(logger, "Unable rename {0} to {1}".format(backupFile, archivedFile), 'error')
