@@ -1,5 +1,6 @@
 import ConfigParser
 import os
+import shutil
 import sys
 import time
 from utilities import Utilities
@@ -16,6 +17,7 @@ if __name__ == '__main__':
 	compress = False
 	config = None
 	configFile = None
+	deleteDirectory = None
 	error = False
 	fileName = ''
 	logger = None
@@ -54,6 +56,11 @@ if __name__ == '__main__':
 								if utils.create_tarfile(tarfile, backup):
 									backupFile = tarfile
 									utils.log_output(logger, "Tar file {0} has been created".format(backupFile), 'info')
+
+									deleteDirectory = config.get('tar', 'deleteDirectory')
+									if deleteDirectory:
+										# Remove the directory
+										shutil.rmtree(backup)
 								else:
 									error = True
 									utils.log_output(logger, "Error creating {0}".format(tarfile), 'error')
